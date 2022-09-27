@@ -1,14 +1,23 @@
 
 let time = 90;
 let timerId;
-
+let currentQIndex;
+let currentAIndex;
+let currentWIndex1;
+let currentWIndex2;
 let asked=[];
-let finished;
+let answered = 0;
+let finished = false;
+let correct = 0;
+let incorrect = 0;
 /* const questionsEl = document.getElementsByClassName('.que') */
 var answersEl = document.getElementById("answers");
 
 var questionEl = document.getElementById("question");
 console.log(questionEl);
+
+const correctEl = document.getElementById("correct");
+const incorrectEl = document.getElementById("incorrect");
 
 const timerEl = document.getElementById("time");
 var startButton = document.getElementById("start");
@@ -16,6 +25,8 @@ console.log(startButton);
 
 // startButton.onclick = console.log('click');/* setInterval(tick,1000); */
 startButton.addEventListener('click', timerInit)
+
+reStyle();
 
 
 
@@ -26,6 +37,7 @@ function timerInit(){
     {    
         console.log('init');
         timerId = setInterval(tick, 1000);
+        randomize(); //show first question and answers
     }
 }
 
@@ -40,24 +52,40 @@ function gameOver(){
     }
 }
 
+function updateScore(){
+    correctEl.innerHTML = correct.toString();
+    incorrectEl.innerHTML = incorrect.toString();
+    console.log('update');
+}
 
 function tick(){
+    updateScore();
     //for loop while time is > 0
     if(time > 0){
         time--
         timerEl.textContent = time.toString();
         console.log('tick');
     }
+    //if you finished all questions
 
     else  {
         gameOver();
     }
+    if(answered==(Object.keys(questions).length/2)) 
+    {
+        finished = true;
+    }
+    if(finished == true){
+        gameOver();
+    }
+
+    console.log(answered)
     
     //time up
 }
 
 
-
+//Add questions to this object and the size of the quiz will scale infinitely
 const questions = {
 
     q1: 'Primary programming language of web development:',
@@ -69,7 +97,7 @@ const questions = {
     q3: 'Store multiple pieces of data in one indexed variable called a/an:',
     a3: 'Array',
 
-    q4: 'Store multiple strings accessible through keys in a/an:',
+    q4: 'Store multiple pieces of data accessible through keys in a/an:',
     a4: 'Object',
 
     q5:'Used to store text data:',
@@ -80,20 +108,27 @@ const questions = {
 }
 
 
-function appendAnswers(a){
-    //randomize insert at beginning or end
-    let shuffle = Math.floor(Math.random()*2);
-    
-    if(shuffle = 1){
-        $('#answers').append('<li class="btn">'+a+'<li>');
-    }
+function appendAnswers(a,i){
 
-    else{
-        $('#answers').prepend('<li class="btn">'+a+'<li>');
-    }
-    //add answer variable
-    
+        $('#answers').append('<li class="btn" id='+i+'>'+a+'<li>');
+        $('#'+i).click(function() {
 
+            console.log('click');
+            console.log(currentAIndex);
+            console.log(this.id);
+
+            if(this.id == currentAIndex){
+                console.log('correct');
+                correct++
+            }
+            else{
+                incorrect++
+            }
+            answered++
+            
+            if(!finished) randomize();
+
+        });
 }
 
 function rng(){
@@ -108,14 +143,15 @@ function answerRng(){
     return i;
 }
 
-function shuffleAnswers(a,b,c){
+function shuffleAnswers(a,b,c,ia,ib,ic){
         console.log('shuffle');
-        appendAnswers(a);
-        appendAnswers(b);
-        appendAnswers(c);
+        appendAnswers(a,ia);
+        appendAnswers(b,ib);
+        appendAnswers(c,ic);
+
     }
 
-//Random question logic
+//Random new question logic
 function randomize()
 {
     if(asked.length < (Object.keys(questions).length/2))// if all questions havent been asked, execute logic.
@@ -147,40 +183,50 @@ function randomize()
         questionEl.textContent = questions[qIndex];
         
         $('#answers').empty();
-        $('#answers').css('list-style-type','none');
+
+
+
+
+        //set some dynamic global variables to hold current correct indexes for comparison.
+        currentAIndex = index;
+        currentQIndex = index;
+        currentWIndex1 = wrongIndex;
+        currentWIndex2 = wrongIndex2;
 
         var answerOrder = answerRng();
 
         if(answerOrder == 1) 
         {
-            shuffleAnswers(questions[aIndex],questions[aWrong1],questions[aWrong2])
+            shuffleAnswers(questions[aIndex],questions[aWrong1],questions[aWrong2],index,wrongIndex,wrongIndex2)
         }
         else if(answerOrder == 2) 
         {
-            shuffleAnswers(questions[aWrong1],questions[aIndex],questions[aWrong2])
+            shuffleAnswers(questions[aWrong1],questions[aIndex],questions[aWrong2],wrongIndex,index,wrongIndex2)
         }
         else
         {
-            shuffleAnswers(questions[aWrong1],questions[aWrong2],questions[aIndex])
+            shuffleAnswers(questions[aWrong1],questions[aWrong2],questions[aIndex],wrongIndex,wrongIndex2,index)
         }
 
-        $('.btn').css("margin-top","10px"); //some styling was lost, reapply spacing
+
+        reStyle();
         // console.log(aIndex);
         // console.log(aWrong1);
         // console.log(aWrong2);
-        console.log(answerOrder);
+        console.log(currentAIndex);
 
         asked.push(index);
     }
-    else{
-        finished = true;
-    }
+}
+
+function reStyle()
+{
+    $('#answers').css('list-style-type','none');
+    $('.btn').css("margin-top","10px"); //some styling was lost, reapply spacing
 }
 
 
-randomize();
 
-randomize();
 
 
 
